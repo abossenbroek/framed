@@ -1,0 +1,22 @@
+version: '3'
+services:
+  web:
+    image: framed-server:1.0-SNAPSHOT
+    ports:
+    - "9000:9000"
+    - "9443:9443"
+    volumes:
+    - logvolume01:/var/log
+    environment:
+    - APPLICATION_SECRET="changeme"
+    links:
+    - db
+    stdin_open: true
+    tty: true
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: example
+volumes:
+  logvolume01: {}

@@ -8,7 +8,7 @@ Framed is meant as an easy photo sharing application that targets the different 
 The project uses the [simple build tool (SBT)](https://www.scala-sbt.org) with [sbt native docker](https://www.scala-sbt.org/sbt-native-packager/formats/docker.html#) plugin.
 This permits to build launch the server as follows:
 
- - `sbt publishLocal`
+ - `sbt docker:publishLocal`
  - `docker-compose up`
 
 The latter command starts the database server required as backend to the web server.

@@ -23,29 +23,25 @@ lazy val server = (project in file("server")).settings(commonSettings).settings(
   // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
   EclipseKeys.preTasks := Seq(compile in Compile),
   // Docker.io setup
-
-  // setting a maintainer which is used for all packaging types
-  maintainer := "Anton Bossenbroek",
-
-  // exposing the play ports (Change these to whatever you are using)
-  dockerExposedPorts in Docker := Seq(9000, 9443),
-  dockerBaseImage := "oracle/serverjre:8",
-  javaOptions in Universal ++= Seq(
-    // JVM memory tuning
-    "-J-Xmx1024m",
-    "-J-Xms128m",
-    // Since play uses separate pidfile we have to provide it with a proper path
-    // name of the pid file must be play.pid
-    s"-Dpidfile.path=/opt/docker/${packageName.value}/run/play.pid"
+  dockerCommands := Seq(
+    Cmd("FROM openjdk:8u181-jdk-slim-stretch"),
+    Cmd("LABEL MAINTAINER", "Anton Bossenbroek <anton.bossenbroek@me.com>"),
+    Cmd("WORKDIR", "/opt/docker"),
+    Cmd("ADD", "--chown=daemon:daemon opt /opt"),
+    Cmd("RUN", "[\"mkdir\", \"-p\", \"/opt/docker/logs\", \"/opt/docker/config\"]"),
+    Cmd("RUN", "[\"chown\", \"-R\", \"daemon:daemon\", \"/opt/docker/logs\", \"/opt/docker/config\"]"),
+    Cmd("VOLUME", "[\"/opt/docker/logs\", \"/opt/docker/config\"]"),
+    Cmd("USER", "daemon"),
+    Cmd("CMD", s"/opt/docker/bin/${packageName.value} -Dhttp.port=$$PORT -Dconfig.file=/opt/docker/conf/heroku.conf")
   ),
-  // use ++= to merge a sequence with an existing sequence
-  dockerCommands ++= Seq(
-    ExecCmd("RUN", "mkdir", s"/opt/docker/${packageName.value}"),
-    ExecCmd("RUN", "mkdir", s"/opt/docker/${packageName.value}/run"),
-    ExecCmd("RUN", "chown", "-R", "daemon:daemon", s"/opt/docker/${packageName.value}/")
-  )
-
-).enablePlugins(PlayScala,DockerPlugin).
+//  // use ++= to merge a sequence with an existing sequence
+//  dockerCommands ++= Seq(
+//    ExecCmd("RUN", "mkdir", s"/opt/docker/${packageName.value}"),
+//    ExecCmd("RUN", "mkdir", s"/opt/docker/${packageName.value}/run"),
+//    ExecCmd("RUN", "chown", "-R", "daemon:daemon", s"/opt/docker/${packageName.value}/")
+//  ),
+  dockerExposedVolumes := Seq("/opt/docker/logs", "/opt/docker/config"),
+  ).enablePlugins(PlayScala,DockerPlugin).
   dependsOn(sharedJvm)
 
 lazy val client = (project in file("client")).settings(commonSettings).settings(

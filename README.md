@@ -20,8 +20,6 @@ The latter command starts the database server required as backend to the web ser
 For easy debugging you can inspect a Dockerfile after it is  generated with sbt using,
 
  - `sbt docker:stage && cat server/target/docker/stage/Dockerfile`
- 
-
 
 ### DataBase
 The database is integrated into Play with [Slick](http://slick.lightbend.com/doc/2.1.0/orm-to-slick.html) and 

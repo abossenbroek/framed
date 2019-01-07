@@ -1,6 +1,8 @@
 version: '3'
 services:
   web:
+    env_file: 
+    - .env
     image: framed-server:1.0-SNAPSHOT
     ports:
     - "9000:9000"
@@ -17,6 +19,8 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_PASSWORD: exampl
+    env_file: 
+    - .env
 volumes:
   logvolume01: {}

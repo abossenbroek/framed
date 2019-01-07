@@ -1,10 +1,10 @@
 import sbtcrossproject.{crossProject, CrossType}
+import com.typesafe.sbt.packager.docker._
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.5",
+  scalaVersion := "2.12.6",
   organization := "com.framed"
 )
-
 
 lazy val server = (project in file("server")).settings(commonSettings).settings(
   name := """framed-server""",
@@ -24,8 +24,27 @@ lazy val server = (project in file("server")).settings(commonSettings).settings(
     specs2 % Test
   ),
   // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
-  EclipseKeys.preTasks := Seq(compile in Compile)
-).enablePlugins(PlayScala).
+  EclipseKeys.preTasks := Seq(compile in Compile),
+  // Docker.io setup
+  dockerCommands := Seq(
+    Cmd("FROM openjdk:8u181-jdk-slim-stretch"),
+    Cmd("LABEL MAINTAINER", "Anton Bossenbroek <anton.bossenbroek@me.com>"),
+    Cmd("WORKDIR", "/opt/docker"),
+    Cmd("ADD", "--chown=daemon:daemon opt /opt"),
+    Cmd("RUN", "[\"mkdir\", \"-p\", \"/opt/docker/logs\", \"/opt/docker/config\"]"),
+    Cmd("RUN", "[\"chown\", \"-R\", \"daemon:daemon\", \"/opt/docker/logs\", \"/opt/docker/config\"]"),
+    Cmd("VOLUME", "[\"/opt/docker/logs\", \"/opt/docker/config\"]"),
+    Cmd("USER", "daemon"),
+    Cmd("CMD", s"/opt/docker/bin/${packageName.value} -Dhttp.port=$$PORT -Dconfig.file=/opt/docker/conf/heroku.conf")
+  ),
+//  // use ++= to merge a sequence with an existing sequence
+//  dockerCommands ++= Seq(
+//    ExecCmd("RUN", "mkdir", s"/opt/docker/${packageName.value}"),
+//    ExecCmd("RUN", "mkdir", s"/opt/docker/${packageName.value}/run"),
+//    ExecCmd("RUN", "chown", "-R", "daemon:daemon", s"/opt/docker/${packageName.value}/")
+//  ),
+  dockerExposedVolumes := Seq("/opt/docker/logs", "/opt/docker/config"),
+  ).enablePlugins(PlayScala,DockerPlugin).
   dependsOn(sharedJvm)
 
 lazy val client = (project in file("client")).settings(commonSettings).settings(
@@ -47,9 +66,6 @@ lazy val sharedJs = shared.js
 // loads the server project at sbt startup
 onLoad in Global := (onLoad in Global).value andThen {s: State => "project server" :: s}
 
-//lazy val root = (project in file(".")).enablePlugins(PlayScala)
-//
-//scalaVersion := "2.12.7"
 //
 //libraryDependencies += guice
 //libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test

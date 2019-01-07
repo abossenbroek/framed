@@ -11,7 +11,7 @@ This permits to build launch the server as follows:
  - `echo PORT=9000 >> .env`
  - run `sbt playGenerateSecret` to generate a unique application secret, you should save this secret to the file `.env` in a line `APPLICATION_SECRET='the-secret'`, you can than continue,
  - `sbt docker:publishLocal`
- - `docker run -p 9000:9000 --env-file --rm -ti framed-server:1.0-SNAPSHOT` or,
+ - `docker run -p 9000:9000 --env-file .env --rm -ti framed-server:1.0-SNAPSHOT` or,
  - `docker-compose up`
 
 The latter command starts the database server required as backend to the web server.
